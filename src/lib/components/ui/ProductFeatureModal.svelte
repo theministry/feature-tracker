@@ -117,10 +117,10 @@
 							>{release?.name || 'No release'} ({release?.released ? 'released' : 'unreleased'})</td
 						>
 					</tr>
-					{#if release?.date}
+					{#if release?.general_availability}
 						<tr>
 							<td>{release.released ? 'Released on:' : 'Expected release date:'}</td>
-							<td>{new Date(release.date).toLocaleDateString()}</td>
+							<td>{new Date(release.general_availability).toLocaleDateString()}</td>
 						</tr>
 					{/if}
 					{#if productFeature.note}

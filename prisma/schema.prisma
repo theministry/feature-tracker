@@ -7,19 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ImplementationStatus {
-  NOT_PLANNED
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  NOT_AVAILABLE
-}
-
 model Category {
   id         Int        @id @default(autoincrement())
   name       String
-  note       String?    @db.VarChar(1024)
   parent_id  Int?
+  note       String?    @db.VarChar(1024)
   parent     Category?  @relation("nestedCategories", fields: [parent_id], references: [id], onDelete: Cascade)
   categories Category[] @relation("nestedCategories")
   features   Feature[]
@@ -27,28 +19,13 @@ model Category {
   @@map("categories")
 }
 
-// Unfortunately spark-k8s is not a valid enum value
-//enum ProductImageName {'
-//  airflow
-//  druid
-//  hadoop
-//  hbase
-//  hive
-//  kafka
-//  nifi
-//  spark-k8s
-//  superset
-//  trino
-//  zookeeper
-//}
-
 model Product {
-  id                 Int                @id @default(autoincrement())
-  name               String             @unique
-  note               String?            @db.VarChar(1024)
-  code_name          String?
-  product_features   ProductFeature[]
-  product_versions   ProductVersion[]
+  id               Int              @id @default(autoincrement())
+  name             String           @unique
+  note             String?          @db.VarChar(1024)
+  code_name        String?
+  product_features ProductFeature[]
+  product_versions ProductVersion[]
 
   @@map("products")
 }
@@ -56,8 +33,8 @@ model Product {
 model Feature {
   id               Int              @id @default(autoincrement())
   name             String
-  note             String?          @db.VarChar(1024)
   category_id      Int
+  note             String?          @db.VarChar(1024)
   categories       Category         @relation(fields: [category_id], references: [id], onDelete: Cascade)
   product_features ProductFeature[]
 
@@ -69,46 +46,49 @@ model ProductFeature {
   product_id            Int
   feature_id            Int
   implementation_status ImplementationStatus
-  release_id            Int?
-  release               Release?             @relation(fields: [release_id], references: [id], onDelete: Cascade)
-  dependencies          ProductFeature[]     @relation("dependencies")
-  dependants            ProductFeature[]     @relation("dependencies")
   note                  String?              @db.VarChar(1024)
-  product               Product              @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  release_id            Int?
   feature               Feature              @relation(fields: [feature_id], references: [id], onDelete: Cascade)
+  product               Product              @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  release               Release?             @relation(fields: [release_id], references: [id], onDelete: Cascade)
+  product_features_B    ProductFeature[]     @relation("dependencies")
+  product_features_A    ProductFeature[]     @relation("dependencies")
 
   @@unique([product_id, feature_id])
   @@map("product_features")
 }
 
 model Release {
-  id                 Int                @id @default(autoincrement())
-  name               String
-  date               DateTime?
-  released           Boolean
-  product_features   ProductFeature[]
-  product_lifecycles ProductLifecycle[]
-  release_versions   ReleaseVersion[]
+  id                   Int                @id @default(autoincrement())
+  name                 String
+  general_availability DateTime?
+  released             Boolean
+  end_of_development   DateTime?
+  end_of_life          DateTime?
+  end_of_sales         DateTime?
+  end_of_service       DateTime?
+  end_of_support       DateTime?
+  product_features     ProductFeature[]
+  product_lifecycles   ProductLifecycle[]
+  release_versions     ReleaseVersion[]
 
   @@map("releases")
 }
 
 model ReleaseVersion {
-  version          String             @id
-  release_id       Int
-  created_at       DateTime?
-
+  version    String             @id
+  release_id Int
+  created_at DateTime?
+  release    Release            @relation(fields: [release_id], references: [id], onDelete: Cascade)
   components ReleaseComponent[]
-  release    Release                  @relation(fields: [release_id], references: [id], onDelete: Cascade)
 
   @@map("release_versions")
 }
 
 model ProductVersion {
-  id         Int    @id @default(autoincrement())
-  product_id Int
-  version    String
-
+  id               Int                @id @default(autoincrement())
+  product_id       Int
+  version          String
   product          Product            @relation(fields: [product_id], references: [id], onDelete: Cascade)
   ProductLifecycle ProductLifecycle[]
   ReleaseComponent ReleaseComponent[]
@@ -117,19 +97,10 @@ model ProductVersion {
   @@map("product_versions")
 }
 
-enum SupportStatus {
-  LONG_TERM_SUPPORT
-  GENERAL_AVAILABILITY
-  DEPRECATED
-  END_OF_LIFE
-}
-
 model ProductLifecycle {
-  product_version_id Int
-  release_id         Int
-
-  support_status     SupportStatus
-
+  product_version_id  Int
+  release_id          Int
+  support_status      SupportStatus
   rel_product_version ProductVersion @relation(fields: [product_version_id], references: [id])
   rel_release_id      Release        @relation(fields: [release_id], references: [id])
 
@@ -138,14 +109,27 @@ model ProductLifecycle {
 }
 
 model ReleaseComponent {
-  product_version_id Int
-  release_version    String
-
-  purl String
-
+  product_version_id  Int
+  release_version     String
+  purl                String
   rel_product_version ProductVersion @relation(fields: [product_version_id], references: [id])
   rel_release_version ReleaseVersion @relation(fields: [release_version], references: [version])
 
   @@unique([purl, release_version])
   @@map("release_components")
+}
+
+enum ImplementationStatus {
+  NOT_PLANNED
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  NOT_AVAILABLE
+}
+
+enum SupportStatus {
+  LONG_TERM_SUPPORT
+  GENERAL_AVAILABILITY
+  DEPRECATED
+  END_OF_LIFE
 }

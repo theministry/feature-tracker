@@ -151,9 +151,9 @@
 						{release?.name || 'No Release'}
 					</span>
 					{#if release}
-						{#if release.date}
+						{#if release.general_availability}
 							{release.released ? 'was' : 'will be'}
-							released on {new Date(release.date).toLocaleDateString()}
+							released on {new Date(release.general_availability).toLocaleDateString()}
 						{:else}
 							is {release.released ? 'released' : 'not yet released'}
 						{/if}

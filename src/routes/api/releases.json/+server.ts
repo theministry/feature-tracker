@@ -10,7 +10,7 @@ import { prisma } from "$lib/prisma";
 export const GET = async () => {
     try {
         const body = await prisma.release.findMany({
-            orderBy: { date: 'desc' }
+            orderBy: { general_availability: 'desc' }
         });
         return json(body);
     } catch ({ code, message }) {

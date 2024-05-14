@@ -21,7 +21,7 @@
 	setContext('editable', editable);
 
 	$: sortedReleases = $releases.sort(
-		(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+		(a, b) => new Date(a.general_availability).getTime() - new Date(b.general_availability).getTime()
 	);
 </script>
 
@@ -42,7 +42,7 @@
 					<div
 						class="tooltip tooltip-bottom"
 						data-tip="{release.released ? 'Released' : 'Will be released'} on: {new Date(
-							release.date
+							release.general_availability
 						).toLocaleDateString()}"
 					>
 						{release.name}
